@@ -21,7 +21,7 @@ func NewServer(ip string, port int) *Server {
 
 func (server *Server) ConnHandler(conn net.Conn) {
 	// 处理当前连接业务
-	fmt.Println("connect success ", conn.LocalAddr())
+	fmt.Println("connect success ", conn.RemoteAddr())
 }
 
 func (server *Server) Start() {
@@ -50,6 +50,6 @@ func (server *Server) Start() {
 			continue
 		}
 		// 3.handle
-		server.ConnHandler(conn)
+		go server.ConnHandler(conn)
 	}
 }
