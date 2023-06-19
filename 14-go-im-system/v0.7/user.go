@@ -41,6 +41,14 @@ func (user *User) listenUserMsgChan() {
 	}
 }
 
+// 向用户客户端发送消息
+func (user *User) sendMsg2Client(msg string) {
+	_, err := user.connect.Write([]byte(msg + "\n"))
+	if err != nil {
+		fmt.Printf("向%s客户端发送消息「%s」失败\n", user.Name, msg)
+	}
+}
+
 // 用户上线
 func (user *User) online() {
 	// 将用户信息加到OnlineUserMap中

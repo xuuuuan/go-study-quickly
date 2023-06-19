@@ -33,7 +33,7 @@ func (server *Server) listenServerMsgChannel() {
 		// 将msg发送给所有在线用户
 		server.mapLock.Lock()
 		for _, user := range server.OnlineUserMap {
-			user.UserMsgChan <- msg
+			user.sendMsg2Client(msg)
 		}
 		server.mapLock.Unlock()
 	}
@@ -87,8 +87,7 @@ func (server *Server) ConnHandler(conn net.Conn) {
 		case <-userIsLive:
 		case <-time.After(10 * time.Second):
 			{
-				user.UserMsgChan <- "You've been forced offline."
-				time.Sleep(100 * time.Millisecond)
+				user.sendMsg2Client("You've been forced offline.")
 				err := conn.Close()
 				if err != nil {
 					fmt.Println("conn failed to close when forced offline.")
