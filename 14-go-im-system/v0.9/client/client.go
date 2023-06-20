@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net"
+	"os"
 )
 
 var serverIp string
@@ -47,20 +49,57 @@ func init() {
 	*/
 }
 
+func (c *Client) updateUsername() bool {
+	fmt.Println(">>>>>input new name:")
+	var username string
+	_, err := fmt.Scanln(&username)
+	if err != nil {
+		fmt.Println("scan err:", err)
+		return false
+	}
+	// 这里的消息格式参考user.go中的doMessage()
+	msg := "rename-" + username + "\n"
+	_, err = c.connect.Write([]byte(msg))
+	if err != nil {
+		fmt.Println("conn.Write err:", err)
+		return false
+	}
+	return true
+}
+
+func (c *Client) onlineUsers() bool {
+	msg := "users\n"
+	_, err := c.connect.Write([]byte(msg))
+	if err != nil {
+		fmt.Println("conn.Write err:", err)
+		return false
+	}
+	return true
+}
+
 func (c *Client) menu() bool {
 	var model int
 
-	fmt.Println("Select one: 1. Public chat 2. Private chat 3. Update username 0. Exit")
+	fmt.Println("Select one: 1.Public chat 2.Private chat 3.Update username 4.Online users 0.Exit")
 	_, err := fmt.Scanln(&model)
 	if err != nil {
 		return false
 	}
-	if model >= 0 && model <= 3 {
+	if model >= 0 && model <= 4 {
 		c.model = model
 		return true
 	} else {
-		fmt.Println(">>>>Please enter a number within 0~3<<<<")
+		fmt.Println(">>>>Please enter a number within 0~4<<<<")
 		return false
+	}
+}
+
+// 处理server端发回的消息
+func (c *Client) dealServerResponse() {
+	// 一旦client.conn有数据，就直接copy到stdout标准输出上, 永久阻塞监听
+	_, err := io.Copy(os.Stdout, c.connect)
+	if err != nil {
+		fmt.Println("io.Copy err:", err)
 	}
 }
 
@@ -81,7 +120,11 @@ func (c *Client) Run() {
 			break
 		case 3:
 			// 更新用户名
-			fmt.Println("selected update username")
+			c.updateUsername()
+			break
+		case 4:
+			// 在线用户列表
+			c.onlineUsers()
 			break
 		}
 	}
@@ -95,6 +138,9 @@ func main() {
 	if client == nil {
 		fmt.Println(">>>>>>>>>>connect fail<<<<<<<<<<")
 	}
+
+	go client.dealServerResponse()
+
 	fmt.Println(">>>>>>>>>>connect success<<<<<<<<<<")
 
 	client.Run()
