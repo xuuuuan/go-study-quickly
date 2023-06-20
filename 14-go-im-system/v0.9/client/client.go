@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"time"
 )
 
 var serverIp string
@@ -47,6 +48,72 @@ func init() {
 		-port int
 			set server port (default 6789)
 	*/
+}
+
+func (c *Client) publicChat() {
+	fmt.Println(">>>>>input message(exit to quit):")
+	var chatMsg string
+	_, err := fmt.Scanln(&chatMsg)
+	if err != nil {
+		fmt.Println("scan err:", err)
+	}
+	for chatMsg != "exit" {
+		if len(chatMsg) != 0 {
+			_, err = c.connect.Write([]byte(chatMsg + "\n"))
+			if err != nil {
+				fmt.Println("conn.Write err:", err)
+				break
+			}
+		}
+		chatMsg = ""
+		fmt.Println(">>>>>input message(exit to quit):")
+		_, err := fmt.Scanln(&chatMsg)
+		if err != nil {
+			fmt.Println("scan err:", err)
+		}
+	}
+}
+
+func (c *Client) privateChat() {
+	var selectedUser string
+	var chatMsg string
+
+	c.onlineUsers()
+	time.Sleep(100 * time.Millisecond)
+	fmt.Println(">>>>>select one to chat(exit to quit):")
+	_, err := fmt.Scanln(&selectedUser)
+	if err != nil {
+		fmt.Println("scan err:", err)
+	}
+	for selectedUser != "exit" {
+		fmt.Println(">>>>>input message(exit to quit):")
+		_, err := fmt.Scanln(&chatMsg)
+		if err != nil {
+			fmt.Println("scan err:", err)
+		}
+		for chatMsg != "exit" {
+			if len(chatMsg) != 0 {
+				sendMsg := fmt.Sprintf("to:%s:%s\n", selectedUser, chatMsg)
+				_, err := c.connect.Write([]byte(sendMsg))
+				if err != nil {
+					fmt.Println("conn Write err:", err)
+					break
+				}
+			}
+			chatMsg = ""
+			fmt.Println(">>>>>input message(exit to quit):")
+			_, err := fmt.Scanln(&chatMsg)
+			if err != nil {
+				fmt.Println("scan err:", err)
+			}
+		}
+		selectedUser = ""
+		fmt.Println(">>>>>select one to chat(exit to quit):")
+		_, err = fmt.Scanln(&selectedUser)
+		if err != nil {
+			fmt.Println("scan err:", err)
+		}
+	}
 }
 
 func (c *Client) updateUsername() bool {
@@ -112,11 +179,11 @@ func (c *Client) Run() {
 		switch c.model {
 		case 1:
 			// 公聊模式
-			fmt.Println("selected public chat")
+			c.publicChat()
 			break
 		case 2:
 			// 私聊模式
-			fmt.Println("selected private chat")
+			c.privateChat()
 			break
 		case 3:
 			// 更新用户名
