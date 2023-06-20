@@ -88,6 +88,7 @@ func (server *Server) ConnHandler(conn net.Conn) {
 		case <-time.After(300 * time.Second):
 			{
 				user.sendMsg2Client("You've been forced offline.")
+				time.Sleep(100 * time.Millisecond)
 				err := conn.Close()
 				if err != nil {
 					fmt.Println("conn failed to close when forced offline.")

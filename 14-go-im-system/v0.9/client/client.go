@@ -14,12 +14,14 @@ type Client struct {
 	ServerPort int
 	Name       string
 	connect    net.Conn
+	model      int
 }
 
 func NewClient(ip string, port int) *Client {
 	client := Client{
 		ServerIp:   ip,
 		ServerPort: port,
+		model:      999,
 	}
 
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", ip, port))
@@ -45,6 +47,46 @@ func init() {
 	*/
 }
 
+func (c *Client) menu() bool {
+	var model int
+
+	fmt.Println("Select one: 1. Public chat 2. Private chat 3. Update username 0. Exit")
+	_, err := fmt.Scanln(&model)
+	if err != nil {
+		return false
+	}
+	if model >= 0 && model <= 3 {
+		c.model = model
+		return true
+	} else {
+		fmt.Println(">>>>Please enter a number within 0~3<<<<")
+		return false
+	}
+}
+
+func (c *Client) Run() {
+	for c.model != 0 {
+		for c.menu() == false {
+			// 如果返回false就代表非法继续让用户选择
+		}
+		//根据不同的模式处理不同的业务
+		switch c.model {
+		case 1:
+			// 公聊模式
+			fmt.Println("selected public chat")
+			break
+		case 2:
+			// 私聊模式
+			fmt.Println("selected private chat")
+			break
+		case 3:
+			// 更新用户名
+			fmt.Println("selected update username")
+			break
+		}
+	}
+}
+
 func main() {
 	// 解析命令行参数
 	flag.Parse()
@@ -55,5 +97,5 @@ func main() {
 	}
 	fmt.Println(">>>>>>>>>>connect success<<<<<<<<<<")
 
-	select {}
+	client.Run()
 }
